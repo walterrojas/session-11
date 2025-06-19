@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Mi Carrito Ejemplo</title>
+        <style>
+          * {
+            box-sizing: border-box;
+          }
+          body {
+              margin: 0;
+          }
+          .producto {
+            margin: 20px;
+            padding: 20px;
+            border: solid 1px lightgray;
+            border-radius: 15px;
+          }
+          .section {
+            border: solid 1px blue;
+            padding: 10px;
+            border-radius: 15px;
+          }
+          .productos-contenedor {
+            display: flex;
+            flex-direction: column;
+            flex-wrap: wrap;
+            padding: 20px;
+          }
+          .productos {
+            display: block;
+            margin-bottom: 20px;
+          }
+          .productos-titulo {
+            padding-left: 20px;
+          }
+          .carrito-resumen {
+            display: block;
+          }
+
+          @media (min-width: 768px) {
+            .productos-contenedor {
+              flex-direction: row;
+              flex-wrap: nowrap;
+            }
+            .productos {
+              margin-right: 20px;
+              margin-bottom: 0;
+              width: 70%;
+            }
+            .carrito-resumen {
+              width: 30%;
+            }
+          }
+        </style>
+    </head>
+    <body>
+      <h2 class="productos-titulo">Lista de Productos</h2>
+      <section class="productos-contenedor">
+        <section id="productos" class="productos section"></section>
+        <section class="carrito-resumen section">
+          <h2>Resumen Carrito</h2>
+          <button onclick="verResumenCarrito()">Mostrar Productos del Carrito</button>
+          <section id="productosCarrito"></section>
+          <div id="precioFinal"></div>
+        </section>
+      </section>
+    </body>
+    <script>
+      const dataProductos = [
+        {
+          id: "111",
+          name: "Zapatillas Nike",
+          price: 20,
+        },
+        {
+          id: "222",
+          name: "Zapatillas Adidas",
+          price: 100,
+        },
+        {
+          id: "333",
+          name: "Zapatillas Puma",
+          price: 50,
+        },
+      ];
+
+      let productos = document.getElementById("productos");
+      let carrito = JSON.parse(localStorage.getItem("data")) || [];
+
+      let listarProductos = () => {
+        return (productos.innerHTML = dataProductos.map((x) => {
+          let { id, name, price } = x;
+          return `
+              <article id=${id} class="producto">
+                <h3>${name}</h3>
+                <label class="precioEtiqueta">Precio:</label>
+                <label class="precio">${price}</label>
+                <br>
+                <br>
+                <button onclick="agregarAlCarrito(${id})">Agregar</button>
+              </article>
+          `;
+        }).join(""));
+      };
+
+      listarProductos();
+
+      let agregarAlCarrito = (id) => {
+        console.log('agregarAlCarrito - id: ', id);
+
+        let selectedItem = id;
+        let search = carrito.find((x) => x.id === selectedItem);
+
+        if (search === undefined) {
+          carrito.push({
+            id: selectedItem,
+            item: 1,
+          });
+        } else {
+          search.item += 1;
+        }
+
+        console.log(carrito);
+        localStorage.setItem("data", JSON.stringify(carrito));
+      };
+
+
+      let productosCarrito = document.getElementById("productosCarrito");
+      let listarProductosCarrito = () => {
+        if (carrito.length !== 0) {
+          return (productosCarrito.innerHTML = carrito.map((x) => {
+            let { id, item } = x;
+            let productoBuscado= dataProductos.find((y) => y.id == id) || [];
+            console.log('productoBuscado: ', productoBuscado);
+
+            return `
+                <article id=${id} class="producto-carrito">
+                  <h4>${productoBuscado.name}</h4>
+                  <label class="producto-carrito-precio-etiqueta">Precio:</label>
+                  <label class="producto-carrito-precio">${productoBuscado.price}</label>
+                </article>
+                <hr>
+            `;
+          }).join(""));
+        } else {
+          productosCarrito.innerHTML = ``;
+          precioFinal.innerHTML = `
+            <h3>No se agregaron productos al carrito</h3>
+          `;
+        }
+      };
+
+      let precioTotalCarrito = 0;
+      let calcularPrecioTotal = () => {
+        if (carrito.length !== 0) {
+          precioTotalCarrito = carrito
+            .map((x) => {
+              let { item, id } = x;
+              let producto = dataProductos.find((y) => y.id == id) || [];
+
+              return item * producto.price;
+            })
+            .reduce((x, y) => x + y, 0);
+        } else return;
+      };
+
+      let verResumenCarrito = () => {
+        listarProductosCarrito();
+        calcularPrecioTotal();
+        if (carrito.length !== 0) {
+          precioFinal.innerHTML = `
+              <h3>Precio Total : $ ${precioTotalCarrito}</h3>
+            `;
+        }
+      }
+    </script>
+</html>
